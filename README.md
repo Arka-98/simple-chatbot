@@ -267,11 +267,33 @@ for message in load_history(graph, "<paste-a-thread-id>"):
     print(message.type, "→", message.text)
 ```
 
+The `checkpoint` column is not JSON: it is a msgpack-encoded snapshot (the `type` column says `msgpack`),
+because LangGraph always reads and writes the state as one opaque envelope. You can still look inside one
+with the serializer it uses:
+
+```python
+import json
+import sqlite3
+
+from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
+
+row = (
+    sqlite3.connect("data/chatbot.db")
+    .execute("SELECT type, checkpoint FROM checkpoints ORDER BY rowid DESC LIMIT 1")
+    .fetchone()
+)
+snapshot = JsonPlusSerializer().loads_typed(row)
+print(json.dumps(snapshot, indent=2, default=str))
+```
+
+That is a read-only debugging aid — the payload is LangGraph's internal envelope (`channel_values`,
+`channel_versions`, `versions_seen`), not a format to write yourself.
+
 ## Getting started
 
 ### Prerequisites
 
-- **Python 3.11+** (developed on 3.14.7).
+- **Python 3.14+** — the project uses `uuid.uuid7()` for time-ordered thread ids (developed on 3.14.7).
 - **[uv](https://docs.astral.sh/uv/)** — install it once:
   ```powershell
   powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
