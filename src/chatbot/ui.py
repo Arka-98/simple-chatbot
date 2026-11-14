@@ -29,7 +29,7 @@ def load_graph() -> CompiledStateGraph:
 
 
 def new_thread_id() -> str:
-    return str(uuid.uuid4())
+    return str(uuid.uuid7())
 
 
 def render() -> None:
